@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: odoo_postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    networks:
+      - odoo-network
+    restart: unless-stopped
+
+  # Odoo 18
+  odoo:
+    image: odoo:18.0
+    container_name: odoo18
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      - ADMIN_PASSWORD=admin123
+    volumes:
+      # Mount our custom module
+      - ./:/mnt/extra-addons/heap_machine
+      # Persist Odoo data
+      - odoo-data:/var/lib/odoo
+    networks:
+      - odoo-network
+    restart: unless-stopped
+    command: --dev=all
+
+networks:
+  odoo-network:
+    driver: bridge
+
+volumes:
+  odoo-db-data:
+  odoo-data:
